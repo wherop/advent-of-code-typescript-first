@@ -1,4 +1,4 @@
-import run from "aocrunner";
+import run from 'aocrunner';
 
 const parseInput = (rawInput: string) => rawInput;
 
@@ -19,7 +19,7 @@ run({
     tests: [
       // {
       //   input: ``,
-      //   expected: "",
+      //   expected: '',
       // },
     ],
     solution: part1,
@@ -28,7 +28,7 @@ run({
     tests: [
       // {
       //   input: ``,
-      //   expected: "",
+      //   expected: '',
       // },
     ],
     solution: part2,
