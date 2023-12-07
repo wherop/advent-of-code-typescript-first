@@ -2,31 +2,97 @@ import run from 'aocrunner';
 
 const parseInput = (rawInput: string) => rawInput;
 
-type GameSet = {
-  red?: number,
-  green?: number,
-  blue?: number
+type GameDraw = {
+  red: number,
+  green: number,
+  blue: number;
+};
+
+function parseDraw(drawStr: string): GameDraw {
+  let draw: GameDraw = {
+    red: 0,
+    green: 0,
+    blue: 0,
+  };
+
+  const setListStr = drawStr
+    .split(',')
+    .forEach((setStr) => {
+      if (setStr.includes('red')) {
+        draw.red = Number(setStr.match(/\d{1,2}/));
+      }
+      if (setStr.includes('green')) {
+        draw.green = Number(setStr.match(/\d{1,2}/));
+      }
+      if (setStr.includes('blue')) {
+        draw.blue = Number(setStr.match(/\d{1,2}/));
+      }
+    });
+
+  return draw;
 }
 
-type Game = {
-  id: number,
-  setList: GameSet[]
+function parseGameContent(drawStrList: string): GameDraw[] {
+  const gameContent = drawStrList
+    .split(';')
+    .map((drawStr) => {
+      const draw = parseDraw(drawStr);
+      return draw;
+    });
+
+  return gameContent;
 }
 
-function strToGameArr(input: string): Game[] {
-  const strLines = input.split('\n')
-  const idAndSets = strLines.map((line) => {
-    const lineAsArray = line.split(':')
-    const gameId = Number(lineAsArray[0].match(/[0-9]{1,3}/g))
-    const setList = lineAsArray[1].split(';').map((set) => { set.split(',') })
-   })
+function parseInputToGameArr(input: string): GameDraw[][] {
+  const gameArr = input.split('\n').map((lineStr) => {
+    const game = parseGameContent(lineStr.split(':')[1]);
+    return game;
+  });
+
+  return gameArr;
 }
+
+function isPossible(game: GameDraw[], limit: GameDraw): boolean {
+  for (let draw of game) {
+    if (
+      draw.red > limit.red ||
+      draw.green > limit.green ||
+      draw.blue > limit.blue
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function getPossibleIndices(games: GameDraw[][], limit: GameDraw) {
+  let possibleIndices: number[] = [];
+  for (let i = 0; i < games.length; i++) {
+    const game = games[i];
+    if (isPossible(game, limit)) {
+      possibleIndices.push(i + 1);
+    }
+  }
+  return possibleIndices;
+}
+
 
 
 const part1 = (rawInput: string) => {
   const input = parseInput(rawInput);
-  const gamesData: Game[] = strToGameArr(input)
-  return;
+
+  const drawLimit: GameDraw = {
+    red: 12,
+    green: 13,
+    blue: 14
+  };
+
+  const games: GameDraw[][] = parseInputToGameArr(input);
+  const possibleGames = getPossibleIndices(games, drawLimit);
+
+  return possibleGames.reduce(
+    (partialSum: number, currentValue: number) => partialSum + currentValue
+  );
 };
 
 const part2 = (rawInput: string) => {
@@ -59,5 +125,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  onlyTests: false,
 });
