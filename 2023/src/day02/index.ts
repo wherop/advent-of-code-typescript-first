@@ -2,10 +2,14 @@ import run from 'aocrunner';
 
 const parseInput = (rawInput: string) => rawInput;
 
+// type GameDraw = {
+//   red: number,
+//   green: number,
+//   blue: number;
+// };
+
 type GameDraw = {
-  red: number,
-  green: number,
-  blue: number;
+  [color: string]: number,
 };
 
 function parseDraw(drawStr: string): GameDraw {
@@ -95,10 +99,54 @@ const part1 = (rawInput: string) => {
   );
 };
 
+
+
+function maxOfDraws(maxValues: GameDraw, draw: GameDraw): GameDraw {
+  for (const color in maxValues) {
+    if (maxValues[color] < draw[color]) {
+      maxValues[color] = draw[color];
+    }
+  }
+  return maxValues;
+}
+
+function getMinSet(game: GameDraw[]): GameDraw {
+  let maxValues: GameDraw = {
+    red: 0,
+    green: 0,
+    blue: 0,
+  };
+
+  for (let draw of game) {
+    maxValues = maxOfDraws(maxValues, draw);
+  }
+  return maxValues
+}
+
+function getPowerOfSet(set: GameDraw): number {
+  let power: number = 1
+  for (const color in set) {
+    power = power * set[color]
+  }
+  return power
+}
+
+function getPowers(games: GameDraw[][]): number[] {
+  return games.map((game) => {
+    const minSet = getMinSet(game);
+    const power = getPowerOfSet(minSet);
+    return power;
+  });
+}
+
+
+
 const part2 = (rawInput: string) => {
   const input = parseInput(rawInput);
+  const games: GameDraw[][] = parseInputToGameArr(input);
 
-  return;
+  const powers = getPowers(games)
+  return powers.reduce((sum, current) => sum + current);
 };
 
 run({
@@ -117,10 +165,14 @@ run({
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: '',
-      // },
+      {
+        input: `Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+        Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+        Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+        Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+        Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green`,
+        expected: 2286,
+      },
     ],
     solution: part2,
   },
