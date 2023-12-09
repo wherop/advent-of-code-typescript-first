@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "es2020",
+    "target": "ES2022",
+    "module": "NodeNext",
     "removeComments": true,
     "declaration": true,
     "outDir": "./dist",
     "preserveConstEnums": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "forceConsistentCasingInFileNames": true,
-    "importHelpers": true
+    "importHelpers": true,
+    "lib": ["ES2023"]
   },
   "include": [
     "src"
