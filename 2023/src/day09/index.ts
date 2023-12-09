@@ -8,24 +8,31 @@ const parseInput = (rawInput: string) => {
 
 const element = (e: number | number[]): number | number[] => e;
 
-function isAllZeroes(arr: number[]): boolean {
+function isNotAllZeroes(arr: number[]): boolean {
   for (const element of arr) {
     if (element != 0) {
-      return false
+      return true
     }
   }
 
-  return true
-
-  // return !arr.find((element) => element != 0)
+  return false
 }
 
 function getDiff(num1: number, num2: number) {
   return num2 - num1;
 }
 
-function makePrediction(predictTable: number[][]) {
+function makePrediction(diffSeqTable: number[][]): number {
+  const revSeqTable = diffSeqTable.reverse()
+  let extrapolation: number[] = [0]
 
+  for (let i = 1; i < revSeqTable.length; i++) {
+    const lastOfSeq = revSeqTable[i].findLast(element) as number
+    const lastOfExt = extrapolation[extrapolation.length -1]
+
+    extrapolation.push(lastOfSeq + lastOfExt)
+  }
+  return extrapolation[extrapolation.length -1]
 }
 
 function getDiffSeq(seq: number[]): number[] {
@@ -38,28 +45,29 @@ function getDiffSeq(seq: number[]): number[] {
   return diffSeq;
 }
 
-function getPredictions(input: number[][]) {
+function getPredictions(input: number[][]): number[] {
   const predictions = input.map((record) => {
-    let predictTable = [record];
+    let diffSeqTable = [record];
 
     do {
-      predictTable.push(
-        getDiffSeq(predictTable.findLast(element) as number[])
+      diffSeqTable.push(
+        getDiffSeq(diffSeqTable.findLast(element) as number[])
       );
-      console.log(predictTable);
-    } while (isAllZeroes(predictTable.findLast(element) as number[]));
+    } while (isNotAllZeroes(diffSeqTable.findLast(element) as number[]));
+    
 
-    const prediction = makePrediction(predictTable);
-
+    const prediction = makePrediction(diffSeqTable);
+    return prediction
   });
+
+  return predictions
 }
 
 const part1 = (rawInput: string) => {
   const input = parseInput(rawInput);
-  // console.log(input);
   const predictions = getPredictions(input)
 
-  return;
+  return predictions.reduce((sum, current) => sum + current);
 };
 
 const part2 = (rawInput: string) => {
@@ -90,5 +98,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  onlyTests: false,
 });
