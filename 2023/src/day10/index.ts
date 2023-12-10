@@ -26,24 +26,19 @@ enum TileChar {
 type Pipe = {
   tileChar: TileChar | string;
   coord: Coordinates;
-  connect: {
-    N: boolean;
-    E: boolean;
-    S: boolean;
-    W: boolean;
-  };
+  connect: Directions[];
 };
 
 
 
 const ANIMAL = 'S';
 const ORIGIN: Coordinates = { y: 0, x: 0 };
-const MOVE = {
-  N: { y: -1, x: 0 },
-  E: { y: 0, x: 1 },
-  S: { y: 1, x: 0 },
-  W: { y: 0, x: -1 },
-};
+const MOVE = [ // use with Diretions enum
+  { y: -1, x: 0 },
+  { y: 0, x: 1 },
+  { y: 1, x: 0 },
+  { y: 0, x: -1 },
+];
 
 class Vector {
   add(coord1: Coordinates, coord2: Coordinates = ORIGIN): Coordinates {
@@ -65,6 +60,7 @@ class Vector {
     };
   }
 }
+const VECTOR = new Vector;
 
 const parseInput = (rawInput: string) => {
   return rawInput.split('\n').map((line) => line.split(''));
@@ -73,8 +69,13 @@ const parseInput = (rawInput: string) => {
 const part1 = (rawInput: string) => {
   const field = parseInput(rawInput);
 
-  const getCharByCoord = (coord: Coordinates): string => {
-    return field[coord.y][coord.x];
+  const getCharByCoord = (coord: Coordinates): string | null => {
+    console.log(coord)
+    const char = field[coord.y][coord.x]
+    if (char != null) {
+      return char
+    }
+    return null;
   };
 
   // [y, x]
@@ -91,76 +92,49 @@ const part1 = (rawInput: string) => {
   };
 
   const parseTileAt = (coord: Coordinates): Pipe => {
-    const char = getCharByCoord(coord);
+    const char = getCharByCoord(coord) ?? '';
     let n, e, s, w;
+    let connections: Directions[];
     switch (char) {
       case TileChar.NS:
-        n = 1;
-        e = 0;
-        s = 1;
-        w = 0;
+        connections = [Directions.N, Directions.S];
         break;
 
       case TileChar.EW:
-        n = 0;
-        e = 1;
-        s = 0;
-        w = 1;
+        connections = [Directions.E, Directions.W];
         break;
 
       case TileChar.NE:
-        n = 1;
-        e = 1;
-        s = 0;
-        w = 0;
+        connections = [Directions.N, Directions.E];
         break;
 
       case TileChar.NW:
-        n = 1;
-        e = 0;
-        s = 0;
-        w = 1;
+        connections = [Directions.N, Directions.W];
         break;
 
       case TileChar.SW:
-        n = 0;
-        e = 0;
-        s = 1;
-        w = 1;
+        connections = [Directions.S, Directions.W];
         break;
 
       case TileChar.SE:
-        n = 0;
-        e = 1;
-        s = 1;
-        w = 0;
+        connections = [Directions.S, Directions.E];
         break;
 
       case TileChar.ANIMAL:
-        n = 1;
-        e = 1;
-        s = 1;
-        w = 1;
+        connections = [Directions.N, Directions.E, Directions.S, Directions.W];
         break;
 
       default:
-        n = 0;
-        s = 0;
-        e = 0;
-        w = 0;
+        connections = [];
         break;
     }
 
     const tile: Pipe = {
       tileChar: char,
       coord: coord,
-      connect: {
-        S: !!s,
-        E: !!e,
-        N: !!n,
-        W: !!w,
-      }
+      connect: connections
     };
+    
     return tile;
   };
 
@@ -207,23 +181,45 @@ const part1 = (rawInput: string) => {
     const pipe1 = parseTileAt(coord1).connect;
     const pipe2 = parseTileAt(coord2).connect;
 
-    if ((coord1.y - 1 === coord2.y) && pipe1.N && pipe2.S) {
+    if ((coord1.y - 1 === coord2.y) &&
+      pipe1.includes(Directions.N) &&
+      pipe2.includes(Directions.S)) {
       return true;
     }
-    if ((coord1.x + 1 === coord2.x) && pipe1.E && pipe2.W) {
+    if ((coord1.x + 1 === coord2.x) &&
+      pipe1.includes(Directions.E) &&
+      pipe2.includes(Directions.W)) {
       return true;
     }
-    if ((coord1.y + 1 === coord2.y) && pipe1.S && pipe2.N) {
+    if ((coord1.y + 1 === coord2.y) &&
+      pipe1.includes(Directions.S) &&
+      pipe2.includes(Directions.N)) {
       return true;
     }
-    if ((coord1.x - 1 === coord2.x) && pipe1.W && pipe2.E) {
+    if ((coord1.x - 1 === coord2.x) &&
+      pipe1.includes(Directions.W) &&
+      pipe2.includes(Directions.E)) {
       return true;
     }
     return false;
   };
 
-  const findNextInLoop = (currPipe: Pipe, visited: Pipe[]) => {
+  const findNextInLoop = (currPipe: Pipe, visited: Pipe[]): Pipe | null => {
+    let neighbors = [];
 
+    for (const dir of currPipe.connect) {
+      const neighborRelativeCoord = MOVE[dir];
+      const neighborCoord = VECTOR.add(currPipe.coord, neighborRelativeCoord);
+      if (neighborCoord.y < 0 || neighborCoord.x < 0) {
+        throw new Error('Coordinate out of bounds')
+      }
+      const neighborPipe = parseTileAt(neighborCoord);
+      neighbors.push(neighborPipe);
+      if (!visited.includes(neighborPipe)) {
+        return neighborPipe;
+      }
+    }
+    return null;
   };
 
 
@@ -231,6 +227,25 @@ const part1 = (rawInput: string) => {
   const allNeighbors = scanStartNeighbors(sCoord);
 
   const connectingNeighbours = allNeighbors.filter((neighbor) => doTheyConnect(sCoord, neighbor.coord));
+
+  let head = [connectingNeighbours[0],connectingNeighbours[1]];
+  let visited = [[parseTileAt(sCoord)],[parseTileAt(sCoord)]]; 
+
+try {
+  
+  while (head[1] != head[0]) {
+    for (let i = 0; i < head.length; i++) {
+        visited[i].push(head[i])
+        head[i]=findNextInLoop(head[i],visited[i])
+    }
+  }
+} catch (error) {
+  console.error(error)
+}
+
+  console.log(visited[0].slice(0,-1))
+  console.log(visited[1].slice(0,-1))
+
 
 
 
@@ -277,5 +292,5 @@ LJ.LJ`,
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: false,
+  onlyTests: true,
 });
