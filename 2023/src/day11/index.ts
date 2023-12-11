@@ -10,7 +10,7 @@ const getMatrixStr = <T>(matrix: T[][]): string => {
   return matrix.map((row) => row.join('')).join('\n');
 };
 
-const indexOfEmptyCol = (matrix: string[][]): number[] => {
+const indexOfEmptyCols = (matrix: string[][]): number[] => {
   let colsToExpand = [];
   for (let i = 0; i < matrix[0].length; i++) {
     let col = [];
@@ -27,12 +27,31 @@ const indexOfEmptyCol = (matrix: string[][]): number[] => {
   return colsToExpand;
 };
 
-const expandColumns = <T>(matrix: T[][], colsToExpand: number[]): T[][] => {
+const indexOfEmptyRows = (matrix: string[][]): number[] => {
+  let rowsToExpand = [];
+  for (let i = 0; i < matrix[0].length; i++) {
+    let row = [];
+    for (let j = 0; j < matrix.length; j++) {
+      row.push(matrix[i][j]);
+    }
+    // console.log('---')
+    // console.log(i)
+    if (!row.includes('#')) {
+      // console.log(col)
+      rowsToExpand.push(i);
+    }
+  }
+  return rowsToExpand;
+};
+
+const expandColumns = <T>(matrix: T[][], colsToExpand: number[], times: number = 1): T[][] => {
   for (let i = colsToExpand.length - 1; i >= 0; i--) {
     const colIndex = colsToExpand[i];
-    matrix.forEach((row) => {
-      row.splice(colIndex, 0, row[colIndex]);
-    });
+    for (let j = 0; j < times; j++) {
+      matrix.forEach((row) => {
+        row.splice(colIndex, 0, row[colIndex]);
+      });
+    }
   }
   return matrix;
 };
@@ -50,15 +69,22 @@ const numberGalaxies = (matrix: string[][]): string[][] => {
   return matrix;
 };
 
-const parseInput = (rawInput: string) => {
+const parseInput2000 = (rawInput: string,) => {
+  const arr2d = rawInput.split('\n').map((row) => row.split(''));
+  // const numberedMatrix = numberGalaxies(arr2d);
+  // return numberedMatrix;
+  return arr2d
+};
+
+const parseInput = (rawInput: string, expand: number = 1) => {
   const arr2d = rawInput.split('\n').map((row) => row.split(''));
   // expand universe
-  const colsToExpand = indexOfEmptyCol(arr2d);
-  const colsExpandedMatrix = expandColumns(arr2d, colsToExpand);
+  const colsToExpand = indexOfEmptyCols(arr2d);
+  const colsExpandedMatrix = expandColumns(arr2d, colsToExpand, expand);
 
   const transMatrix = transpose(colsExpandedMatrix);
-  const transRowsToExpand = indexOfEmptyCol(transMatrix);
-  const transRowsExpandedMatrix = expandColumns(transMatrix, transRowsToExpand);
+  const transRowsToExpand = indexOfEmptyCols(transMatrix);
+  const transRowsExpandedMatrix = expandColumns(transMatrix, transRowsToExpand, expand);
 
   const expandedMatrix = transpose(transRowsExpandedMatrix);
 
@@ -79,10 +105,21 @@ const getDistance = (currGalaxy: number[], target: number[]): number => {
   return dY + dX;
 };
 
-const part1 = (rawInput: string) => {
-  const matrix = parseInput(rawInput);
-  // console.log(getMatrixStr(matrix));
+const listDistances = (coordList: number[][]): number[][] => {
+  let distances = [];
+  for (let i = 0; i < coordList.length; i++) {
+    const currGalaxy = coordList[i];
+    let distsFromCurr = [];
+    for (let j = i + 1; j < coordList.length; j++) {
+      const target = coordList[j];
+      distsFromCurr.push(getDistance(currGalaxy, target));
+    }
+    distances.push(distsFromCurr);
+  }
+  return distances;
+};
 
+const getCoordinates = (matrix: string[][]) => {
   let galaxyCoordList: number[][] = [];
   matrix.forEach((row, i) => {
     row.forEach((element, j) => {
@@ -91,37 +128,75 @@ const part1 = (rawInput: string) => {
       }
     });
   });
+  return galaxyCoordList;
+};
 
-  // console.log(galaxyCoordList);
+const convertToNew = (coords: number[], emptyRowsCols: number[][], expansion: number) => { 
+  const newCoords = coords.map((coord, i) => {
+    const expansionsBeforeCoord = emptyRowsCols[i].filter((index) => index < coord)
+    return coord + (expansion * expansionsBeforeCoord.length)
+   })
+   return newCoords
+ }
 
-  // get distance
-  let distances = []
-  for (let i = 0; i < galaxyCoordList.length; i++) {
-    const currGalaxy = galaxyCoordList[i];
-    let distsFromCurr = []
-    for (let j = i + 1; j < galaxyCoordList.length; j++) {
-      const target = galaxyCoordList[j];
-      distsFromCurr.push(getDistance(currGalaxy, target))
-    }
-    distances.push(distsFromCurr)
-  }
+const part1 = (rawInput: string) => {
+  const matrix = parseInput(rawInput);
 
-  // console.log(distances)
+  const galaxyCoordList = getCoordinates(matrix);
 
-  let sum = 0
+  const distances = listDistances(galaxyCoordList);
+
+  let sum = 0;
   for (let row of distances) {
     for (let dist of row) {
-      sum += dist
+      sum += dist;
     }
   }
-
   return sum;
 };
 
 const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput);
+  const EXPANSION = 10;
+  const matrix = parseInput2000(rawInput);
 
-  return;
+  const emptyRowsCols = [
+    indexOfEmptyRows(matrix),
+    indexOfEmptyCols(matrix)
+  ];
+  // console.log(emptyRowsCols)
+  const baseCoordList = getCoordinates(matrix)
+  const newCoordList:number[][] = []
+  baseCoordList.forEach((galaxy) => {
+    newCoordList.push(convertToNew(galaxy, emptyRowsCols, EXPANSION))
+   })
+  // console.log(baseCoordList)
+  // console.log(newCoordList)
+  
+   const distances = listDistances(newCoordList);
+  // console.log(distances)
+   let sum = 0;
+   for (let row of distances) {
+     for (let dist of row) {
+       sum += dist;
+     }
+   }
+ 
+   return sum;
+  
+
+
+  // const matrix = parseInput(rawInput, EXPANSION);
+  // const galaxyCoordList = getCoordinates(matrix);
+  // const distances = listDistances(galaxyCoordList);
+  // let sum = 0;
+  // let nrOfPairs = 0;
+  // for (let row of distances) {
+  //   for (let dist of row) {
+  //     sum += dist;
+  //     nrOfPairs++
+  //   }
+  // }
+  // return sum;
 };
 
 run({
@@ -146,10 +221,34 @@ run({
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: '',
-      // },
+      {
+        input:
+          `...#......
+.......#..
+#.........
+..........
+......#...
+.#........
+.........#
+..........
+.......#..
+#...#.....`,
+        expected: 1030,
+      },
+      {
+        input:
+          `...#......
+.......#..
+#.........
+..........
+......#...
+.#........
+.........#
+..........
+.......#..
+#...#.....`,
+        expected: 8410,
+      },
     ],
     solution: part2,
   },
