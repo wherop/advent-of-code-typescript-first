@@ -42,8 +42,8 @@ const numberGalaxies = (matrix: string[][]): string[][] => {
   matrix.map((row, i) => {
     row.map((element, j) => {
       if (element === GALAXY) {
-        galaxyCount++;
         matrix[i][j] = String(galaxyCount);
+        galaxyCount++;
       }
     });
   });
@@ -64,7 +64,7 @@ const parseInput = (rawInput: string) => {
 
   // number galaxies
   const nrOfGalaxies = getMatrixStr(expandedMatrix).match(/#/gm)?.length;
-  console.log(nrOfGalaxies);
+  // console.log(nrOfGalaxies);
 
   const numberedMatrix = numberGalaxies(expandedMatrix);
 
@@ -73,9 +73,15 @@ const parseInput = (rawInput: string) => {
 
 };
 
+const getDistance = (currGalaxy: number[], target: number[]): number => {
+  const dY = Math.abs(target[0] - currGalaxy[0]);
+  const dX = Math.abs(target[1] - currGalaxy[1]);
+  return dY + dX;
+};
+
 const part1 = (rawInput: string) => {
   const matrix = parseInput(rawInput);
-  console.log(getMatrixStr(matrix));
+  // console.log(getMatrixStr(matrix));
 
   let galaxyCoordList: number[][] = [];
   matrix.forEach((row, i) => {
@@ -86,11 +92,30 @@ const part1 = (rawInput: string) => {
     });
   });
 
-  console.log(galaxyCoordList)
+  // console.log(galaxyCoordList);
 
   // get distance
-  
-  return;
+  let distances = []
+  for (let i = 0; i < galaxyCoordList.length; i++) {
+    const currGalaxy = galaxyCoordList[i];
+    let distsFromCurr = []
+    for (let j = i + 1; j < galaxyCoordList.length; j++) {
+      const target = galaxyCoordList[j];
+      distsFromCurr.push(getDistance(currGalaxy, target))
+    }
+    distances.push(distsFromCurr)
+  }
+
+  // console.log(distances)
+
+  let sum = 0
+  for (let row of distances) {
+    for (let dist of row) {
+      sum += dist
+    }
+  }
+
+  return sum;
 };
 
 const part2 = (rawInput: string) => {
@@ -129,5 +154,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  onlyTests: false,
 });
