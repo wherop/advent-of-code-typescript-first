@@ -17,41 +17,41 @@ const charToNumber: { [char: string]: Spring; } = {
 // }
 
 type Ledger = {
-  str: string[];
-  nr: number[][];
+  series: number[][];
+  groups: number[][];
 };
 
 const generateAllBinariesOfLength = (length: number) => {
-  const possibleBinaries: string[] = [];
-  const recursiveGenerator = (binaryStr: string) => {
-    if (binaryStr.length === length) {
-      possibleBinaries.push(binaryStr);
+  const possibleBinaries: number[][] = [];
+  const recursiveGenerator = (binaryArr: number[]) => {
+    if (binaryArr.length === length) {
+      possibleBinaries.push([...binaryArr]);
       return;
     }
-    for (const number of Array(2).keys()) {
-      recursiveGenerator(binaryStr + number);
+    for (let i = 0; i < 2; i++) {
+      recursiveGenerator([...binaryArr, i]);
     }
   };
-  recursiveGenerator('');
+  recursiveGenerator([]);
   return possibleBinaries;
 };
 
-const parseInput = (rawInput: string) => {
-  let recordsStr: number[][] = [];
-  let recordsNr: number[][] = [];
+const parseInput = (rawInput: string): Ledger => {
+  let serialRecords: number[][] = [];
+  let groupRecords: number[][] = [];
   let ledger = {
-    str: recordsStr,
-    nr: recordsNr
+    series: serialRecords,
+    groups: groupRecords
   };
   rawInput.split('\n').map((line) => {
     const splitLine = line.split(' ');
-    ledger.str.push(splitLine[0].split('').map((char) => charToNumber[char]));
-    ledger.nr.push(splitLine[1].split(',').map((num) => Number(num)));
+    ledger.series.push(splitLine[0].split('').map((char) => charToNumber[char]));
+    ledger.groups.push(splitLine[1].split(',').map((num) => Number(num)));
   });
   return ledger;
 };
 
-const getNumericRecord = (strRecord: string) => {
+const getNumericRecord = (strRecord: number[]) => {
   let numbers: number[] = [];
   let counter = 0;
   for (let i = 0; i < strRecord.length; i++) {
@@ -64,37 +64,69 @@ const getNumericRecord = (strRecord: string) => {
         counter = 0;
       }
     } else {
-      throw new Error(`'${char}' character encountered. This string should only consist of '.' and '#'.`);
+      throw new Error(`'${char}' character encountered. This Array should only consist of '0's and '1's.`);
     }
+  }
+  if (counter > 0) {
+    numbers.push(counter);
   }
   return numbers;
 };
 
+const fillInUnknowns = (
+  record: number[],
+  unknowns: number[],
+  combination: number[]) => {
+  let recCopy = record.slice();
+  for (let k = 0; k < unknowns.length; k++) {
+    const unkIndex = unknowns[k];
+    recCopy[unkIndex] = combination[k];
+  }
+  return recCopy;
+};
+
+const sumUp = (arr: number[]) => {
+  if (arr.length === 0) {
+    return 0;
+  }
+  return arr.reduce((total, current) => total += current);
+};
+
 const part1 = (rawInput: string) => {
   const ledger = parseInput(rawInput);
+  let combiCountList = [];
+  for (let i = 0; i < ledger.series.length; i++) {
+    const record = ledger.series[i];
+    const damaged = ledger.groups[i];
+    const unknowns: number[] = [];
 
-  for (let i = 0; i < ledger.str.length; i++) {
-    const record = ledger.str[i];
-    const damaged = ledger.nr[i];
-    const unknown: number[] = [];
     for (let j = 0; j < record.length; j++) {
       if (record[j] === Spring.UNKNOWN) {
-        unknown.push(j);
+        unknowns.push(j);
       }
     }
-    const allCombinations = generateAllBinariesOfLength(unknown.length);
-    const possibleCombinations = allCombinations.filter((combination) => {
 
+    const allCombinations = generateAllBinariesOfLength(unknowns.length);
+    const possibleCombinations: number[][] = allCombinations.filter((combination) => {
+      const restoredRecord = fillInUnknowns(record, unknowns, combination);
+      const combiDamaged = getNumericRecord(restoredRecord);
+      if (sumUp(combiDamaged) !== sumUp(damaged)) {
+        return false;
+      }
+      const areEqual = combiDamaged.every(
+        (element, index) => element === damaged[index]);
+      if (areEqual) {
+        return true;
+      }
+      return false;
     });
-  }
-  try {
-    const arr= '111011100011'.split('').map((n) => Number(n))
-    console.log(getNumericRecord(arr));
-  } catch (error) {
-    console.error(error);
+
+    combiCountList.push(possibleCombinations.length);
   }
 
-  return;
+  const sum = sumUp(combiCountList);
+
+  return sum;
 };
 
 const part2 = (rawInput: string) => {
@@ -131,5 +163,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  onlyTests: false,
 });
