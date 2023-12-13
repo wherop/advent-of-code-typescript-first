@@ -1,4 +1,5 @@
 import run from 'aocrunner';
+import { unlink } from 'fs';
 enum Spring {
   GOOD = 0,
   BAD = 1,
@@ -129,9 +130,23 @@ const part1 = (rawInput: string) => {
   return sum;
 };
 
-const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput);
+// not the way to go about it
+const unfold = (record: number[], multiplier: number) => {
+  let newRecord = record.slice();
+  for (let j = 0; j < multiplier; j++) {
+    newRecord = [...newRecord, Spring.UNKNOWN, ...record];
+  }
+  return newRecord;
+};
 
+const part2 = (rawInput: string) => {
+  const MULTIPLIER = 5;
+  const ledger = parseInput(rawInput);
+  let combiCountList = [];
+  for (let i = 0; i < ledger.series.length; i++) {
+  }
+
+  // IDEA: get positions that remain the same accross all arrangement, and fix them for part 2 
 
   return;
 };
@@ -155,13 +170,20 @@ run({
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: '',
-      // },
+      {
+        input:
+          `???.### 1,1,3
+.??..??...?##. 1,1,3
+?#?#?#?#?#?#?#? 1,3,1,6
+????.#...#... 4,1,1
+????.######..#####. 1,6,5
+?###???????? 3,2,1
+`,
+        expected: 525152,
+      },
     ],
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: false,
+  onlyTests: true,
 });
