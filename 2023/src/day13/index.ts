@@ -30,6 +30,10 @@ const areArrsEqual = (arr1: number[], arr2: number[]) => {
   );
 };
 
+const transpose = <T>(matrix: T[][]): T[][] => {
+  return matrix[0]?.map((col, i) => matrix.map(row => row[i]));
+};
+
 const getColumn = (matrix: number[][], index: number) => { 
   return matrix.map((row) => row[index])
  }
@@ -79,19 +83,26 @@ const searchHorizontal = (matrix: number[][]) => {
   return null;
 };
 
-const searchVertical = (matrix: number[][]) => {
-  for (let i = 0; i < matrix[0].length - 1; i++) {
-    const currentCol = getColumn(matrix, i)
-    const nextCol = getColumn(matrix, i + 1)
-    const areEqual = areArrsEqual(currentCol, nextCol);
-    if (areEqual && verticalReflectionIsCorrect(matrix, i)) {
-      console.log(`Vertical found! Index: ${i}`);
-      return i;
-    }
-  }
-  console.log(`No vertical found!`);
-  return null;
-};
+const searchVertical = (matrix: number[][]) => { 
+  const transMatrix = transpose(matrix)
+  const result =  searchHorizontal(transMatrix)
+  console.log(result !== null ? 'Vertical found!' : 'No vertical found!')
+  return result
+ }
+
+// const searchVertical = (matrix: number[][]) => {
+//   for (let i = 0; i < matrix[0].length - 1; i++) {
+//     const currentCol = getColumn(matrix, i)
+//     const nextCol = getColumn(matrix, i + 1)
+//     const areEqual = areArrsEqual(currentCol, nextCol);
+//     if (areEqual && verticalReflectionIsCorrect(matrix, i)) {
+//       console.log(`Vertical found! Index: ${i}`);
+//       return i;
+//     }
+//   }
+//   console.log(`No vertical found!`);
+//   return null;
+// };
 
 const part1 = (rawInput: string) => {
   const matrixArr = parseInput(rawInput);
