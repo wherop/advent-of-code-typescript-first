@@ -32,8 +32,10 @@ const getNumbers = (rawInput: string) => {
 };
 
 const parseInput = (rawInput: string) => {
-  return rawInput.split('\n').map((line) => line.split(''));
+  return rawInput.split('\n');
 };
+
+
 
 const getDistance = (num: number[], symbol: number[]) => {
   const dY = Math.abs(num[0] - symbol[0]);
@@ -74,6 +76,10 @@ const part1 = (rawInput: string) => {
   }, 0);
 };
 
+const getGears = (input: string[]) => { 
+  
+ }
+
 const part2 = (rawInput: string) => {
   const input = parseInput(rawInput);
 
@@ -101,10 +107,21 @@ run({
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: '',
-      // },
+      {
+        input: 
+`467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..
+`,
+        expected: '467835',
+      },
     ],
     solution: part2,
   },
